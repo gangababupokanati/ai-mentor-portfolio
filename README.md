@@ -1,1 +1,1 @@
-# ai-mentor-portfolio
+# AI Mentor Bootcamp — <Pokanati Gangababu>
