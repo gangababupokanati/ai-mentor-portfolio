@@ -1,4 +1,4 @@
-# AI Mentor Bootcamp — <Pokanati Gangababu>
+# AI Mentor Bootcamp — Pokanati Gangababu
 ## Day 1 — Setup complete
 
 - ✅ Google AI Studio API key provisioned
