@@ -1,0 +1,173 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": " https://news.ycombinator.com/rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "84b533c4-76ce-4df7-83e3-9bde6a556d40",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"={{ 'Summarise these RSS items into 5 bullets for a placement coach. Each bullet ≤ 20 words. Items follow:\\\\n\\\\n' + $input.all().slice(0, 5).map(i => '- ' + i.json.title + ': ' + (i.json.contentSnippet || i.json.content || '')).join('\\\\n') }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "68438fe8-aea6-4ff1-b901-92b0f2c22515",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8xW4aTGZr8uBB5fO",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "36efab1f-cdb4-438f-b75b-d4362871ed59",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "sendTo": "gangababupokanati123@gmail.com",
+        "subject": "=Placement News Digest — {{$now.format(\"dd MMM yyyy\")}}",
+        "message": "=Good morning. Today's placement news digest:  {{ $json[\"candidates\"][0][\"content\"][\"parts\"][0][\"text\"] }}  Sent automatically by n8n at 7:00 AM IST.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        0
+      ],
+      "id": "7cf50703-b601-4530-84dc-ac6a26c0be2d",
+      "name": "Send a message",
+      "webhookId": "07563997-d6f9-473f-bea9-aef281cc04cf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VA2p4ghJXewZNtHH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6a36f013-4686-492b-9ca2-63f32259929e",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "availableInMCP": false
+  },
+  "versionId": "bf8062df-9c91-453e-bd22-6de5df7be59c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7ab69e20e6be28bc0f126d88b627d014d5791dc5ff3be8701d4eb482d1da1d70"
+  },
+  "id": "V06mhrirg8T4bEWe",
+  "tags": [
+    {
+      "updatedAt": "2026-05-22T08:54:47.665Z",
+      "createdAt": "2026-05-22T08:54:47.665Z",
+      "id": "cvUAkTi9b5HCesC3",
+      "name": "Daily Placement News Dig"
+    }
+  ]
+}
