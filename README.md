@@ -51,6 +51,27 @@ Day 5 Lab 5B — Hugging Face Pulls
 3. **Production rule of thumb:** if your usage exceeds the API free tier (~30K requests/month at HF), self-host. Otherwise API.
 
 
+## Day 8 Lab 8A — RAGAS Baseline
+
+20-question testset. Day 7 RAG evaluated.
+
+| Metric | Score | Threshold | Pass? |
+|--------|-------|-----------|-------|
+| context_precision | 0.72 | ≥ 0.6 | ✓ |
+| faithfulness | 0.68 | ≥ 0.7 | ✗ |
+| answer_relevancy | 0.81 | ≥ 0.7 | ✓ |
+
+### Interpretation
+- Faithfulness 0.68 means ~32% of answers are not fully grounded in the retrieved text.
+  The RAG is partially hallucinating. Fix: add "use ONLY the context" to the prompt.
+- Context precision 0.72 is acceptable. Top-4 retrieval is finding mostly relevant chunks.
+- Answer relevancy 0.81 is strong. Gemini answers the question asked.
+
+### Ship decision
+Not yet. Faithfulness below 0.7 is a hard gate for student-facing systems.
+
+
+
 ## Day 9 Lab 9A — Hello-LangGraph
 
 - 1-tool ReAct agent with DuckDuckGo web_search
