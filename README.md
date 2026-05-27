@@ -9,8 +9,40 @@
 ![Gemini first call](gemini_first_call.png)
 ```
 
+## Day 2 Lab 2B — Errors handled
 
- Day 4 — Productivity sprint
+1. **Markdown fence wrapping** (`\`\`\`json ... \`\`\``)
+   The retry prompt asks Gemini to output raw JSON without fences. Triggers on ~5-10% of calls.
+
+2. **Hallucinated phone number when source has none**
+   `Optional[str] = None` in Pydantic — model returns `null`, schema validates.
+
+3. **Empty / whitespace-only input**
+   Pydantic raises ValidationError with "Field required". Caller catches.
+
+## Sample résumés processed: 3 / 3 successful
+
+## Day 3 Lab 3A — Verification Chain
+
+### Verification Matrix
+
+| # | Claim | AI Source | Perplexity Check | Primary Source URL | Verdict |
+|---|-------|-----------|------------------|--------------------|---------|
+| 1 | Average B.Tech placement package in 2025 was ₹6.2 LPA | NASSCOM | [paste URL] | [paste URL] | PARTIAL |
+| 2 | 78% of Tier-1 students got at least one offer in 2025 | AICTE Annual Report | [paste URL] | [paste URL] | FALSE |
+| 3 | TCS hired ~40,000 freshers in 2025 | TCS Annual Report | [paste URL] | [paste URL] | VERIFIED |
+| 4 | IT sector accounted for 56% of engineering placements | NASSCOM | [paste URL] | [paste URL] | NO PRIMARY SOURCE FOUND |
+| 5 | Median IIT placement package in 2025 was ₹18.5 LPA | India Skills Report | [paste URL] | [paste URL] | PARTIAL |
+
+### Reflection
+
+The claim that looked most authoritative but was actually weakest was claim #__:
+'___'. Gemini cited [source] confidently, and Perplexity initially confirmed it.
+But when I opened the primary URL, I found that the actual number / year /
+framing was different. The lesson: confidence does not equal correctness. The
+verification step belongs to the human — every time.
+
+ # Day 4 — Productivity sprint
 
 **Company:** TCS
 **Time:** 45 minutes (timeboxed)
@@ -31,6 +63,37 @@
 ![Test email screenshot](daily_digest_test_email.png)
 
 
+# Day 5 — Résumé Scorer Streamlit
+
+**Live URL:** https://your-app-name.streamlit.app
+**Code:** [app.py](app.py)
+**Acceptance Log:** [acceptance_log.md](acceptance_log.md)
+
+## Tools Used
+
+- Continue.dev
+- Gemini 2.5 Flash
+- Streamlit
+- GitHub
+- Streamlit Community Cloud
+
+## Features
+
+- Résumé vs JD fit score
+- Rationale
+- Missing skills
+- Suggestions
+- 4-axis score breakdown chart
+- Free learning resources for missing skills
+
+## Reflection
+
+- This is an AI-assisted prototype.
+- To productionise, I would add better error handling, caching, rate limits,
+  and authentication.
+- Continue.dev helped scaffold the UI quickly, but manual review was needed
+  for prompt correctness and deployment fixes.
+
 Day 5 Lab 5B — Hugging Face Pulls
 
 ### Models tested
@@ -49,6 +112,105 @@ Day 5 Lab 5B — Hugging Face Pulls
 1. **API:** for low-volume, occasional calls. Avoids download. Cold-start risk on first call after idle.
 2. **Local:** for batch processing 100+ items, where you want predictable latency and don't pay per call.
 3. **Production rule of thumb:** if your usage exceeds the API free tier (~30K requests/month at HF), self-host. Otherwise API.
+
+## Day 6 Lab 6A — Errors handled
+
+1. **Markdown fence wrapping** (` ```json ... ``` `)
+   The retry prompt asks Gemini to output raw JSON without fences.
+   Triggers on ~5-10% of calls.
+
+2. **Hallucinated phone number when source has none**
+   `Optional[str] = None` in Pydantic — model returns `null`, schema validates.
+
+3. **Empty / whitespace-only input**
+   Pydantic raises ValidationError with "Field required". Caller catches.
+
+**Hallucination on garbage input:** Gemini sometimes invents a plausible résumé
+from non-résumé text. Defence: validate input before sending (e.g., minimum
+length, presence of email-like pattern).
+
+## Day 6 — Capstone Sprint 1: PlacementDataProcessor
+
+### Engineer Answer
+
+1. **PROBLEM** — JDs from Naukri / LinkedIn are messy text — placement cells need
+   structured data to filter ("which JDs want Java + CGPA 7+?"). Manual extraction
+   is unscalable for 50+ JDs.
+
+2. **ARCHITECTURE** — JD URL → BeautifulSoup scraper (extract clean text) → Gemini
+   structured-output call (response_schema=JD Pydantic) → JSON Lines file.
+   Validation at each step; retry on schema fail.
+
+3. **TRADE-OFFS** —
+   - Cost: free Gemini ~1 JD/sec; ~30K tokens/day quota → ~5K JDs/day.
+   - Accuracy: Pydantic catches schema violations but not semantic errors.
+   - Latency: ~2-5s per JD (Gemini call dominant).
+   - Complexity: scraping is fragile — cached fallback is mandatory.
+
+4. **SCALE** —
+   - 10 JDs/day: trivial. Today's lab.
+   - 100 JDs/day: still in free quota. Add overnight batch + sleep between calls.
+   - 10K JDs/day: free tier breaks. Move to paid Gemini or self-host an open model.
+
+5. **INTERVIEW ANSWER** — "I built a structured-output pipeline that turns scraped
+   JDs into clean filterable JSON, using free Gemini and Pydantic. Schema-first
+   design with retry-on-failure made it production-shaped on a free-tier API."
+
+### Files
+- `Day6_PlacementProcessor.ipynb` — the notebook
+- `data/jds.jsonl` — output of this sprint, input for Day 7 RAG
+
+### Pair: <Mentor 1 name> + <Mentor 2 name>
+
+## Day 7 Lab 7A — ChromaDB Hello-World
+
+- Embedded 10 CSE Sem 5 paragraphs with all-MiniLM-L6-v2 (384-dim, free)
+- Indexed in persistent ChromaDB collection `hello_syllabus`
+- Ran 3 semantic queries — observed: top-1 match is relevant when query topic is
+  in corpus, irrelevant when not
+- Plotted PCA 2D — visible OS / DBMS clusters
+
+**Reflection:** Semantic search returns nearest, not exact. RAG must enforce
+citations to catch out-of-corpus queries (this afternoon's Sprint 2).
+
+## Day 7 — Capstone Sprint 2: PlacementKnowledgeRAG
+
+### Engineer Answer
+
+1. **PROBLEM** — Frontier LLMs do not know your private data (JDs, syllabi).
+   Students need a chatbot that answers from YOUR placement corpus, with
+   citations they can verify.
+
+2. **ARCHITECTURE** — 5-box RAG: embed (MiniLM 384-dim) → index (ChromaDB
+   persistent collection with metadata) → retrieve (top-4 cosine similarity)
+   → augment (citation-enforcing prompt) → generate (Gemini 2.5).
+
+3. **TRADE-OFFS** —
+   - Cost: free (MiniLM local + Gemini quota).
+   - Accuracy: top-4 retrieval has ~80% precision on placement-relevant queries.
+   - Latency: 1-2s per query (embedding + retrieval) + 2-5s (Gemini).
+   - Chunking strategy (500-token, 50-overlap) needs tuning per corpus.
+   - Refuses out-of-corpus queries only when prompt enforces "do not guess".
+
+4. **SCALE** —
+   - 50 docs (today): trivial. ChromaDB returns in <100ms.
+   - 5K docs: still fine on one machine.
+   - 1M docs: need HNSW indexing or move to Pinecone/Weaviate.
+
+5. **INTERVIEW ANSWER** — "I built a citation-enforcing RAG over 50+ placement
+   docs (JDs + syllabi) using free MiniLM embeddings, ChromaDB, and Gemini.
+   The system either cites a specific chunk or refuses — no hallucinated answers.
+   Same pattern scales to thousands of docs without retraining."
+
+### 5 cited Q&A pairs
+
+| # | Question | Answer (excerpt) | Sources cited |
+|---|----------|------------------|---------------|
+| 1 | Which companies want Java + DSA + CGPA 7+? | "Per jd_0 (TCS Digital): Java + DSA required, CGPA 7.0 cutoff..." | jd_0, jd_5, jd_8 |
+| 2 | Sem 5 OS topics? | "Per cse_sem5_2: paging, segmentation, virtual memory..." | cse_sem5_2, cse_sem5_5 |
+| 3 | Which JDs require Python? | "Per jd_3 (Accenture)..., per jd_5 (Cognizant)..." | jd_3, jd_5, jd_9 |
+| 4 | Companies hiring in Hyderabad? | "Per jd_1 (TCS Digital), jd_4 (Cognizant): Hyderabad listed..." | jd_1, jd_4 |
+| 5 | What is TCS Codevita? | "I do not know — not in corpus." | (none) |
 
 
 ## Day 8 Lab 8A — RAGAS Baseline
