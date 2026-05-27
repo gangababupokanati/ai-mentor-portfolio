@@ -50,3 +50,16 @@ Day 5 Lab 5B — Hugging Face Pulls
 2. **Local:** for batch processing 100+ items, where you want predictable latency and don't pay per call.
 3. **Production rule of thumb:** if your usage exceeds the API free tier (~30K requests/month at HF), self-host. Otherwise API.
 
+
+## Day 9 Lab 9A — Hello-LangGraph
+
+- 1-tool ReAct agent with DuckDuckGo web_search
+- 4-message trace on a live-fact question (TCS 2026 hiring)
+- Failure case: bad URL → agent reported "could not find" / agent hallucinated [pick one]
+
+### Reflection
+
+1. The trace IS the explanation. Print every step.
+2. The doc-string IS the prompt. Bad doc-string = bad tool selection.
+3. Real agents handle tool failures gracefully — define failure modes in the doc-string.
+
