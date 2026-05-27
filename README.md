@@ -63,3 +63,27 @@ Day 5 Lab 5B — Hugging Face Pulls
 2. The doc-string IS the prompt. Bad doc-string = bad tool selection.
 3. Real agents handle tool failures gracefully — define failure modes in the doc-string.
 
+
+## Day 9 — Capstone Sprint 4: Career Agent
+
+### 3 tools wired
+1. jd_fetcher — fetches job page from URL, returns clean text or ERROR string
+2. skills_gap — pure Python set difference, deterministic
+3. answer_scorer — Gemini scores interview answer 1-10 with rationale
+
+### 3 successful runs
+| # | Student | Tools used | Outcome |
+|---|---------|-----------|---------|
+| 1 | Ravi Kumar (CSE) → TCS | skills_gap, answer_scorer | Gap: Spring Boot, AWS |
+| 2 | Sneha Reddy (ECE) → Cognizant | skills_gap | Strong match, focus on interviews |
+| 3 | Arun Pillai (IT) → Amazon | skills_gap, answer_scorer | Score 8/10 on sample answer |
+
+### Failure recovery
+Bad URL → jd_fetcher returned ERROR string → agent said "could not fetch" — no hallucination.
+
+### Reflection
+1. Test each tool standalone BEFORE wiring into the agent.
+2. The doc-string controls which tool gets picked — be specific.
+3. Tools must return ERROR strings, never crash silently.
+
+
